@@ -1,7 +1,7 @@
 ---
 Title: "pf_amcl"
 Author: "Muros"
-Content: "패키지 설명"
+Content: "amcl을 이용한 위치 찾기 && pf를 이용한 길찾기"
 ---
 
 # pf_amcl
@@ -54,8 +54,27 @@ export TURTLEBOT3_MODEL=burger #타 모델 선택 가능 #waffle, waffle_pi
 ros2 launch pf_amcl go_back_home.launch.py
 ```
 
-### amcl 실행하기
+### AMCL 실행하기
 ```bash
 export TURTLEBOT3_MODEL=burger #타 모델 선택 가능 #waffle, waffle_pi
 ros2 launch pf_amcl amcl.launch.py
 ```
+
+### pf 실행하기 
+```bash
+export TURTLEBOT3_MODEL=burger #타 모델 선택 가능 #waffle, waffle_pi
+ros2 run pf_amcl pf_node 0 0 #0,0으로 이동 명령
+```
+
+## pf 수정 관련
+### potentialF.cpp 열람 방법
+```bash
+gedit ~/pf_amcl_ws/src/pf_amcl/src/potentialF.cpp #text editer 사용시
+code ~/pf_amcl_ws/src/pf_amcl/src/potentialF.cpp #vscode 사용시
+``` 
+potentialF.cpp 수정 이후 아래 코드를 입력해야 수정 사항이 적용됨
+```bash
+cd ~/pf_amcl_ws && colcon build --symlink-install
+```
+### potentialF.cpp 설명
+
