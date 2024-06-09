@@ -32,7 +32,7 @@ def generate_launch_description():
     map_dir = LaunchConfiguration(
         'map',
         default=os.path.join(
-            get_package_share_directory('PF_amcl'),
+            get_package_share_directory('pf_amcl'),
             'map',
             'map.yaml'))
 
@@ -40,7 +40,7 @@ def generate_launch_description():
     param_dir = LaunchConfiguration(
         'params_file',
         default=os.path.join(
-            get_package_share_directory('PF_amcl'),
+            get_package_share_directory('pf_amcl'),
             'param',
             param_file_name))
 

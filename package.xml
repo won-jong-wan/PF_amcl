@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>PF_amcl</name>
+  <name>pf_amcl</name>
   <version>0.0.0</version>
   <description>AI_robot_control_project</description>
   <maintainer email="jonwon2009@tukorea.ac.kr">won</maintainer>

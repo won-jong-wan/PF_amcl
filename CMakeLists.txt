@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
-project(PF_amcl)
+project(pf_amcl)
 
 # Default to C99
 if(NOT CMAKE_C_STANDARD)
@@ -40,13 +40,13 @@ if(BUILD_TESTING)
 endif()
 
 # Add executable the generate | name must be the same as the launch file
-add_executable(PF_node src/potentialF.cpp)
+add_executable(pf_node src/potentialF.cpp)
 # Link dependencies to the executable | name must be the same as the launch file
-ament_target_dependencies(potential_field_node rclcpp nav_msgs sensor_msgs tf2_geometry_msgs tf2 tf2_ros)
+ament_target_dependencies(pf_node rclcpp nav_msgs sensor_msgs tf2_geometry_msgs tf2 tf2_ros)
 
 # install the executable
 install(TARGETS
-PF_node
+pf_node
   DESTINATION lib/${PROJECT_NAME})
 # install the launch executable
 install(DIRECTORY

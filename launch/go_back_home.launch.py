@@ -34,7 +34,7 @@ def generate_launch_description():
     y_pose = LaunchConfiguration('y_pose', default='0.0')
 
     world = os.path.join(
-        get_package_share_directory('PF_amcl'),
+        get_package_share_directory('pf_amcl'),
         'worlds',
         'go_back_home.world'
     )
