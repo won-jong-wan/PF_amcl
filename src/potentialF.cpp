@@ -21,12 +21,10 @@ class PotentialField : public rclcpp::Node
 {
   public:
     PotentialField(char* x_goal, char* y_goal)
-    : Node("potential_field_node")
+    : Node("pf_node")
 
     {
       auto default_qos = rclcpp::QoS(rclcpp::SystemDefaultsQoS());
-      // Create Subscriber to the odometry
-      sub_odom = this->create_subscription<nav_msgs::msg::Odometry>("odom", 10, std::bind(&PotentialField::odom_callback, this, _1));
       // Create Subscriber to AMCL pose
       sub_amcl = this->create_subscription<geometry_msgs::msg::PoseWithCovarianceStamped>("amcl_pose", 10, std::bind(&PotentialField::amcl_callback, this, _1));
       // Create Subscriber to LiDAR
@@ -76,7 +74,7 @@ class PotentialField : public rclcpp::Node
       
 
 
-      delta = PI - fabs(fmod(fabs(angle - theta), 2*PI) - PI);
+      delta = PI - fabs(fmod(fabs(angle - theta_amcl), 2*PI) - PI);
 
       RCLCPP_INFO(this->get_logger(), "angle to goal: %f", delta);
  
@@ -84,20 +82,20 @@ class PotentialField : public rclcpp::Node
       
       if(delta < 0 - tolerance)
       {
-        direction.angular.z = -0.4;
+        direction.angular.z = -0.5;
         direction.linear.x  = 0;
         // v angle +
       }
       else if(delta > 0 + tolerance)
       {
         // v angle -
-        direction.angular.z = 0.4;
+        direction.angular.z = 0.5;
         direction.linear.x  = 0;
       }
       else
       {
         // v forward +
-        direction.linear.x  = 0.3;
+        direction.linear.x  = 0.2;
         direction.angular.z = 0;
       
       }
@@ -118,8 +116,8 @@ class PotentialField : public rclcpp::Node
       // Set the time stamp (current time)
       vector.header.stamp = this->get_clock()->now();
       // set the position (it's always (0,0,0) as the reference frame is odom)
-      vector.pose.position.x = x_odom ;
-      vector.pose.position.y = y_odom ;
+      vector.pose.position.x = x_amcl ;
+      vector.pose.position.y = y_amcl ;
       vector.pose.position.z = 0 ;
       // Compute the theta angle
       float angle;
@@ -144,34 +142,6 @@ class PotentialField : public rclcpp::Node
 
     }
 
-    void ComputeAttraction(float x_a, float y_a)
-    {
-      RCLCPP_INFO(this->get_logger(), "GOAL | x : %f | y : %f",x_a,y_a);
-      // Compute distance between the attraction and the current position
-      float distance =  sqrt(pow(x_a - x_odom,2) + pow(y_a - y_odom,2));
-      // Compute the point to reach relative to the current position
-      x_a = x_a - x_odom;
-      y_a = y_a - y_odom;
-
-      int Q_attraction = 600;
-            // Create the Module of the force to simulate
-      float F_attraction = (Q_attraction )/(4 * PI * pow(distance,2));
-      // Create the position of the force to simulate
-      V_attraction = {F_attraction * x_a , F_attraction * y_a};
-
-      
-      //RCLCPP_INFO(this->get_logger(), "x : %f | y : %f",x_a,y_a);
-      //RCLCPP_INFO(this->get_logger(), "Force: %f",F_attraction);
-      
-
-      //RCLCPP_INFO(this->get_logger(), "angle attraction :%f°",atan(V_attraction[1]/V_attraction[0])*180/PI);
-      //RCLCPP_INFO(this->get_logger(), "v_attraction is : x = %f ; y = %f",x,y);
-
-      geometry_msgs::msg::PoseStamped attraction = PublishVector(V_attraction[0],V_attraction[1]);
-      att_pub->publish(attraction);
-
-    }
-
     void ComputeAttraction_amcl(float x_a, float y_a)
     {
       RCLCPP_INFO(this->get_logger(), "GOAL | x : %f | y : %f",x_a,y_a);
@@ -181,10 +151,9 @@ class PotentialField : public rclcpp::Node
       x_a = x_a - x_amcl;
       y_a = y_a - y_amcl;
 
-      int Q_attraction = 3;
+      int Q_attraction = 300;
             // Create the Module of the force to simulate
-      //float F_attraction = (Q_attraction )/(4 * PI * pow(distance,2));
-      float F_attraction = (Q_attraction )*distance;
+      float F_attraction = (Q_attraction )/(4 * PI * pow(distance,2));
       // Create the position of the force to simulate
       V_attraction = {F_attraction * x_a , F_attraction * y_a};
 
@@ -228,39 +197,9 @@ class PotentialField : public rclcpp::Node
       theta_amcl = yaw;
 
       RCLCPP_INFO(this->get_logger(), "amcl : x = %f | y = %f | theta_amcl = %f" , x_amcl , y_amcl, theta_amcl);
-
-      if(amcl_switch){
-        ComputeAttraction_amcl(goal_x,goal_y);  
-      }
       
-    }
-    void odom_callback(const nav_msgs::msg::Odometry::SharedPtr msg)
-    {
-      // set current x position
-      x_odom = msg->pose.pose.position.x;
-      // set current y position
-      y_odom = msg->pose.pose.position.y;
-
-      // Retrive the rotations using quaterions
-      tf2::Quaternion q(
-              msg->pose.pose.orientation.x,
-              msg->pose.pose.orientation.y,
-              msg->pose.pose.orientation.z,
-              msg->pose.pose.orientation.w);
-      // Convert it into matrice of 3x3
-      tf2::Matrix3x3 m(q);
-      // Init angle variables
-      double roll, pitch, yaw;
-      // Transform quaterion into Euler
-      m.getRPY(roll, pitch, yaw);
-      // Define theta = yaw
-      theta = yaw;
-
-      //RCLCPP_INFO(this->get_logger(), "Odometry : x = %f | y = %f | theta = %f" , x , y, theta);
-
-      if(!amcl_switch){
-        ComputeAttraction(goal_x,goal_y);  
-      }
+      ComputeAttraction_amcl(goal_x,goal_y);
+      
     }
 
 
@@ -289,10 +228,9 @@ class PotentialField : public rclcpp::Node
           //RCLCPP_INFO(this->get_logger(), "Scan n: %d | value: %f",i,scan[i]);
           float Current_Q = (Q_repulsion) / (4 * PI * pow(scan[i],2));
           //float Current_Q = 0;
-          //Current_Q = Q_repulsion*pow(-1/scan[i]+1/max_d, 2);
           // Projection of the vectors in the x , y coordinates
-          x_r -= Current_Q * cos(angle_min+theta+step*i);
-          y_r -= Current_Q * sin(angle_min+theta+step*i);
+          x_r -= Current_Q * cos(angle_min+theta_amcl+step*i);
+          y_r -= Current_Q * sin(angle_min+theta_amcl+step*i);
         }
         else
         {
@@ -323,8 +261,6 @@ class PotentialField : public rclcpp::Node
 
 
     }
-    // odom subsriber variable declaration
-    rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr       sub_odom;
     // amcl_pose subsriber variable declaration
     rclcpp::Subscription<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr       sub_amcl;
     // scan subsriber variable declaration
@@ -341,17 +277,11 @@ class PotentialField : public rclcpp::Node
 
 
     // x position of odometry
-    double x_odom;
-    // y position of odoemtry
-    double y_odom;
-    // x position of odometry
     double x_amcl = 0;
     // y position of odoemtry
     double y_amcl = 0;
     // Angle of the robot(amcl)
     double theta_amcl = 0;
-    // Angle of the robot
-    double theta;
     // Attraction vector
     std::vector<float> V_attraction = {0,0};
     // Replusion vector
@@ -359,8 +289,6 @@ class PotentialField : public rclcpp::Node
     //
     float goal_x = 0;
     float goal_y = 0;
-
-    bool amcl_switch = true;
 
 };
 
