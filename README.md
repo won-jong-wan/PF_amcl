@@ -50,31 +50,55 @@ source ~/.bashrc
 
 ### Gazebo 환경 켜기
 ```bash
-export TURTLEBOT3_MODEL=burger #타 모델 선택 가능 #waffle, waffle_pi
-ros2 launch pf_amcl go_back_home.launch.py
+export TURTLEBOT3_MODEL=burger
+ros2 launch pf_amcl muros_world.launch.py
 ```
 
 ### AMCL 실행하기
 ```bash
-export TURTLEBOT3_MODEL=burger #타 모델 선택 가능 #waffle, waffle_pi
-ros2 launch pf_amcl amcl.launch.py
+export TURTLEBOT3_MODEL=burger
+ros2 launch pf_amcl amcl.launch.py use_sim_time:=true
 ```
 
 ### pf 실행하기 
 ```bash
-export TURTLEBOT3_MODEL=burger #타 모델 선택 가능 #waffle, waffle_pi
+export TURTLEBOT3_MODEL=burger
 ros2 run pf_amcl pf_node 0 0 #0,0으로 이동 명령
 ```
 
-## pf 수정 관련
-### potentialF.cpp 열람 방법
-```bash
-gedit ~/pf_amcl_ws/src/pf_amcl/src/potentialF.cpp #text editer 사용시
-code ~/pf_amcl_ws/src/pf_amcl/src/potentialF.cpp #vscode 사용시
-``` 
-potentialF.cpp 수정 이후 아래 코드를 입력해야 수정 사항이 적용됨
-```bash
-cd ~/pf_amcl_ws && colcon build --symlink-install
-```
-### potentialF.cpp 설명
+## pf 실행 시 parameter 변경 방법
 
+```bash
+#실행 예시
+export TURTLEBOT3_MODEL=burger
+ros2 run pf_amcl pf_node 3 -3 --ros-args -p Q_attraction:=1.0 -p "Q_repulsion:=1.0" -p "max_scan:=100.0"
+```
+
+위와 같이 기존 pf 실행 코드에 추가적인 명령어를 덧붙여 parameter를 변경할 수 있음\
+크게 3가지 parameter가 존재
+
+----
+![pf_image](/images/pf_rm.png)
+
+### Q_attraction
+
+목적지가 로봇을 당기는 인력을 조절할 수 있는 parameter\
+Q_attraction이 증가하면 그만큼 인력 역시 강해짐
+
+### Q_repulsion
+
+로봇 주변의 라이다 센서를 통해 감지된 장애물들이 로봇을 미는 힘을 조절할 수 있는 parameter\
+Q_repulsion이 증가하면 그만큼 척력 역시 강해짐
+
+### max_scan
+
+단위는 m로 로봇 주변 몇 m까지의 장애물을 장애물로 인식할 것인지 조절할 수 있는 parameter\
+max_scan이 5면 로봇 주변 5m 안쪽의 장애물부터의 척력만 받음
+
+#### 주의! 세 parameter 모두 float형으로 소수점을 찍어야 정상입력 가능
+
+## mapping시 주의사항
+```bash
+ros2 run nav2_map_server map_saver_cli -f ~/pf_amcl_ws/src/pf_amcl/map
+```
+기존의 코드가 아닌 위의 코드로 map을 저장해야 AMCL시 열리는 map이 달라짐

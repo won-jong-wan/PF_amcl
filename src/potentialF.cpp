@@ -38,11 +38,37 @@ class PotentialField : public rclcpp::Node
       // Create Publihser of the Final vector
       fin_pub  = this->create_publisher<geometry_msgs::msg::PoseStamped>("Final_Vector",1);
 
+      paramT = this->create_wall_timer(
+        std::chrono::seconds(1),
+        std::bind(&PotentialField::param_callback, this));
+
+      this->declare_parameter<float>("scan_max", 100.0);
+      this->declare_parameter<float>("Q_repulsion", 1.0);
+      this->declare_parameter<float>("Q_attraction", 1.0);
+
+      scan_max = this->get_parameter("scan_max").get_value<float>();
+      Q_repulsion = this->get_parameter("Q_repulsion").get_value<float>();
+      Q_attraction = this->get_parameter("Q_attraction").get_value<float>();
+
+      RCLCPP_INFO(this->get_logger(), "scan_max = %f, Q_repulsion = %f, Q_attraction = %f", scan_max, Q_repulsion, Q_attraction);
       RCLCPP_INFO(this->get_logger(), "x = %s and y = %s", x_goal,y_goal);
 
       goal_x = atof(x_goal);
       goal_y = atof(y_goal);
 
+    }
+
+    void param_callback()
+    {
+      s = scan_max, r = Q_repulsion, a=Q_attraction;
+
+      scan_max = this->get_parameter("scan_max").get_value<float>();
+      Q_repulsion = this->get_parameter("Q_repulsion").get_value<float>();
+      Q_attraction = this->get_parameter("Q_attraction").get_value<float>();
+
+      if(s != scan_max || r != Q_repulsion || a !=Q_attraction){
+        RCLCPP_INFO(this->get_logger(), "fixed scan_max = %f, Q_repulsion = %f, Q_attraction = %f", scan_max, Q_repulsion, Q_attraction);
+      }
 
     }
 
@@ -59,7 +85,7 @@ class PotentialField : public rclcpp::Node
 
       geometry_msgs::msg::Twist direction;
 
-      double tolerance = 0.2 ;
+      double tolerance = 0.5;
       double angle = atan(y_final/x_final);
       double delta;
 
@@ -76,33 +102,45 @@ class PotentialField : public rclcpp::Node
 
       delta = PI - fabs(fmod(fabs(angle - theta_amcl), 2*PI) - PI);
 
-      RCLCPP_INFO(this->get_logger(), "angle to goal: %f", delta);
+      //RCLCPP_INFO(this->get_logger(), "angle to goal: %f", delta);
  
 
-      
-      if(delta < 0 - tolerance)
+      RCLCPP_INFO(this->get_logger(), "delta=%f", delta);
+
+      // if(delta > 1.57){
+      //    delta = -(PI-delta);
+      // }
+
+      double speed = sqrt(pow(x_final, 2)+pow(y_final, 2));
+      double distance =  sqrt(pow(goal_x - x_amcl,2) + pow(goal_y - y_amcl,2));
+
+      if(delta> delta_temp && delta < tolerance){
+        vel_temp = -vel_temp;
+      }
+
+      if(delta > tolerance)
       {
-        direction.angular.z = -0.5;
+        direction.angular.z = vel_temp*-sqrt(delta);
         direction.linear.x  = 0;
         // v angle +
-      }
-      else if(delta > 0 + tolerance)
-      {
-        // v angle -
-        direction.angular.z = 0.5;
-        direction.linear.x  = 0;
       }
       else
       {
         // v forward +
-        direction.linear.x  = 0.2;
+        if(distance < 5){
+          direction.linear.x  = sqrt(distance/10);
+        }
+        else if(speed/100 <= 0.4){
+          direction.linear.x  = speed/10;
+        }else{
+          direction.linear.x  = 0.4;
+        }
         direction.angular.z = 0;
-      
       }
 
       cmd_pub->publish(direction);
+      delta_temp = delta;
       return 0;
- 
     }
 
     geometry_msgs::msg::PoseStamped PublishVector(float x, float y)
@@ -144,16 +182,21 @@ class PotentialField : public rclcpp::Node
 
     void ComputeAttraction_amcl(float x_a, float y_a)
     {
-      RCLCPP_INFO(this->get_logger(), "GOAL | x : %f | y : %f",x_a,y_a);
+      //RCLCPP_INFO(this->get_logger(), "GOAL | x : %f | y : %f",x_a,y_a);
       // Compute distance between the attraction and the current position
       float distance =  sqrt(pow(x_a - x_amcl,2) + pow(y_a - y_amcl,2));
       // Compute the point to reach relative to the current position
       x_a = x_a - x_amcl;
       y_a = y_a - y_amcl;
 
-      int Q_attraction = 300;
+      //Q_attraction = 300;
             // Create the Module of the force to simulate
-      float F_attraction = (Q_attraction )/(4 * PI * pow(distance,2));
+      float F_attraction = 0; 
+      if(distance < 5){
+        F_attraction = (Q_attraction*100 )/(4 * PI * pow(distance,2));
+      }else{
+        F_attraction = Q_attraction;
+      }
       // Create the position of the force to simulate
       V_attraction = {F_attraction * x_a , F_attraction * y_a};
 
@@ -196,7 +239,7 @@ class PotentialField : public rclcpp::Node
       // Define theta = yaw
       theta_amcl = yaw;
 
-      RCLCPP_INFO(this->get_logger(), "amcl : x = %f | y = %f | theta_amcl = %f" , x_amcl , y_amcl, theta_amcl);
+      //RCLCPP_INFO(this->get_logger(), "amcl : x = %f | y = %f | theta_amcl = %f" , x_amcl , y_amcl, theta_amcl);
       
       ComputeAttraction_amcl(goal_x,goal_y);
       
@@ -224,7 +267,6 @@ class PotentialField : public rclcpp::Node
         // If the value of the scan is < 100m it's not tacking into account
         if(scan[i] < max_d and scan[i] > 0.1)
         { 
-          int Q_repulsion = 1;
           //RCLCPP_INFO(this->get_logger(), "Scan n: %d | value: %f",i,scan[i]);
           float Current_Q = (Q_repulsion) / (4 * PI * pow(scan[i],2));
           //float Current_Q = 0;
@@ -275,6 +317,7 @@ class PotentialField : public rclcpp::Node
     rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr  fin_pub;
     // Declare position
 
+    rclcpp::TimerBase::SharedPtr paramT;
 
     // x position of odometry
     double x_amcl = 0;
@@ -290,6 +333,13 @@ class PotentialField : public rclcpp::Node
     float goal_x = 0;
     float goal_y = 0;
 
+    float scan_max = 100;
+    float Q_repulsion = 1;
+    float Q_attraction = 1;
+
+    float delta_temp = 0;
+    float vel_temp = 1;
+    float s= 0 , r= 0 , a= 0 ;
 };
 
 int main(int argc, char * argv[])
