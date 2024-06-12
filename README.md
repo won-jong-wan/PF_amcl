@@ -84,7 +84,7 @@ Content: "amcl을 이용한 위치 찾기 && pf를 이용한 길찾기"
  ros2 run pf_amcl pf_node 3 -3 --ros-args -p Q_attraction:=1.0 -p "Q_repulsion:=1.0" -p "max_scan:=100.0"
  ```
 
- pf 실행 코드에 추가적인 명령어를 덧붙여 parameter를 변경할 수 있음\ 
+ pf 실행 코드에 추가적인 명령어를 덧붙여 parameter를 변경할 수 있음\
  크게 3가지 parameter가 존재
 
  ### Q_attraction
@@ -140,7 +140,8 @@ void ComputeAttraction_amcl(float x_a, float y_a)
  ```
  #### 참고사항
  /***/로 감싸인 부분이 목적지를 기준으로 하는 attraction의 크기에 해당하는 식임\
- F_attraction이 벡터의 크기에 해당하고 방향은 현재 위치와 목적지를 잇는 방향으로 자동 결정됨
+ F_attraction이 벡터의 크기에 해당하고\
+ 방향은 현재 위치와 목적지를 잇는 방향으로 자동 결정됨
 
  ### scan_callback
  Line 247 ~ Line 299
@@ -202,14 +203,14 @@ void scan_callback(sensor_msgs::msg::LaserScan::SharedPtr _msg)
  #### 참고사항
  /***/로 감싸인 부분이 장애물을 기준으로 발생하는 repulsion에 해당하는 식임\
  Current_Q는 벡터의 크기에 해당함\
- 다만 라이다로 인식된 장애물 중 단 한 점에 의한 repulsion의 크기임\
- 모든 장애물 점들로 인한 Current_Q를 통합한 값이 V_repulsion으로 외부 함수로 전달되어 F_attraction와 더해짐\
+ Current_Q는 라이다로 인식된 장애물 중 단 한 점에 의한 repulsion의 크기임\
+ 모든 장애물 점들로 인한 Current_Q를 통합한 값을 V_repulsion이라는 이름으로 외부 함수로 전달하여 F_attraction와 더함\
  통합되는 과정에서 -가 붙기 때문에 Current_Q는 양의 값이어야함
  
  #### 하단 사이트 이용하여 수식 구성 후 수정하는 것을 권장
  https://www.desmos.com/calculator?lang=ko
 
- #### parameter를 코드 속에 직접 넣어도 작동함
+ #### parameter를 코드 속에 직접 변경해도 작동함
  아래와 같이 변수로 선언되어 있음
  ```C++
 float scan_max = 100;
@@ -217,7 +218,7 @@ float Q_repulsion = 1;
 float Q_attraction = 1;
  ```
 
- ### 코드 수정 후 적용 방법
+ ### 코드 수정 후 수정 내역 패키지에 적용허는 방법
  아래 코드에 따라 패키지를 다시 빌드해야함
  ```bash
  cd ~/pf_amcl_ws #패키지가 실치된 경로로 이동
