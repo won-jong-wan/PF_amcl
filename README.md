@@ -221,7 +221,7 @@ float Q_attraction = 1;
  ```
 
  ### 코드 수정 후 수정 내역 패키지에 적용허는 방법
- 아래 코드에 따라 패키지를 다시 빌드해야함
+ 아래 코드에 따라 패키지를 다시 빌드해야 변경된 코드가 적용됨
  ```bash
  cd ~/pf_amcl_ws #패키지가 실치된 경로로 이동
  colcon build --symlink-install  #패키지 다시 빌드
