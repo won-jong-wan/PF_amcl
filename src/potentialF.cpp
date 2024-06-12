@@ -189,28 +189,26 @@ class PotentialField : public rclcpp::Node
       x_a = x_a - x_amcl;
       y_a = y_a - y_amcl;
 
-      //Q_attraction = 300;
-            // Create the Module of the force to simulate
       float F_attraction = 0; 
+      /**************************************************/
+      // Create the Module of the force to simulate
       if(distance < 5){
         F_attraction = (Q_attraction*100 )/(4 * PI * pow(distance,2));
       }else{
         F_attraction = Q_attraction;
       }
+      /**************************************************/
+
       // Create the position of the force to simulate
       V_attraction = {F_attraction * x_a , F_attraction * y_a};
 
-      
       //RCLCPP_INFO(this->get_logger(), "x : %f | y : %f",x_a,y_a);
       //RCLCPP_INFO(this->get_logger(), "Force: %f",F_attraction);
-      
-
       //RCLCPP_INFO(this->get_logger(), "angle attraction :%f°",atan(V_attraction[1]/V_attraction[0])*180/PI);
       //RCLCPP_INFO(this->get_logger(), "v_attraction is : x = %f ; y = %f",x,y);
 
       geometry_msgs::msg::PoseStamped attraction = PublishVector(V_attraction[0],V_attraction[1]);
       att_pub->publish(attraction);
-
     }
     
 
@@ -256,7 +254,6 @@ class PotentialField : public rclcpp::Node
 
       int counter = 0;
 
-
       float x_r = 0;
       float y_r = 0;
 
@@ -267,9 +264,10 @@ class PotentialField : public rclcpp::Node
         // If the value of the scan is < 100m it's not tacking into account
         if(scan[i] < max_d and scan[i] > 0.1)
         { 
-          //RCLCPP_INFO(this->get_logger(), "Scan n: %d | value: %f",i,scan[i]);
+          /**************************************************/
+          // Create the Module of the force to simulate
           float Current_Q = (Q_repulsion) / (4 * PI * pow(scan[i],2));
-          //float Current_Q = 0;
+          /**************************************************/
           // Projection of the vectors in the x , y coordinates
           x_r -= Current_Q * cos(angle_min+theta_amcl+step*i);
           y_r -= Current_Q * sin(angle_min+theta_amcl+step*i);
@@ -290,9 +288,7 @@ class PotentialField : public rclcpp::Node
         //RCLCPP_INFO(this->get_logger(), "x: %f | y: %f",x_r,y_r);
         V_repulsion = {x_r, y_r};
       }
-
       //RCLCPP_INFO(this->get_logger(), "\n angle repulsion : %f°",atan(V_repulsion[1]/V_repulsion[0])*180/PI);
-
 
       // Create the vector for Rviz
       geometry_msgs::msg::PoseStamped repulsion = PublishVector(V_repulsion[0],V_repulsion[1]);
@@ -300,8 +296,6 @@ class PotentialField : public rclcpp::Node
       rep_pub->publish(repulsion);
       // Controller
       controller();
-
-
     }
     // amcl_pose subsriber variable declaration
     rclcpp::Subscription<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr       sub_amcl;
