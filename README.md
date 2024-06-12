@@ -205,7 +205,7 @@ void scan_callback(sensor_msgs::msg::LaserScan::SharedPtr _msg)
  Current_Q는 벡터의 크기에 해당함\
  Current_Q는 라이다로 인식된 장애물 중 단 한 점에 의한 repulsion의 크기임\
  <br/> 
- 모든 장애물 점들로 인한 Current_Q를 통합한 값을 V_repulsion이라는 이름으로 외부 함수로 전달됨\
+ 모든 장애물 점들로 인한 Current_Q를 통합한 값은 V_repulsion이라는 이름으로 외부 함수로 전달됨\
  그 후 V_repulsion과 V_attraction는 더해져 로봇을 움직이는 벡터가 결정됨\
  통합되는 과정에서 -가 붙기 때문에 Current_Q는 양의 값이어야함
  
