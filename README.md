@@ -102,7 +102,7 @@ Content: "amcl을 이용한 위치 찾기 && pf를 이용한 길찾기"
  #### 주의! 세 parameter 모두 float형으로 소수점을 찍어야 정상입력 가능
 
 ## Q_attraction 그리고 Q_repulsion 관련 식 변경 방법
- 관련 식은 모두 ~/pf_amcl_ws/src/PF_amcl/src의 potentialF.cpp 안에 코딩되어 있음\
+ 관련 식은 모두 ~/pf_amcl_ws/src/pf_amcl/src의 potentialF.cpp 안에 코딩되어 있음\
  총 6개의 함수로 이루어져 있으며 우리는 그 중 2개의 함수만을 수정할 것임
  ### ComputeAttraction_amcl
  Line 183 ~ Line 212
