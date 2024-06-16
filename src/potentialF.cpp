@@ -149,7 +149,7 @@ class PotentialField : public rclcpp::Node
       // Create the attraction vector to show in RVIZ
       geometry_msgs::msg::PoseStamped vector;
       // Set the frame id
-      std::string id_frame = "/odom";
+      std::string id_frame = "map";
       vector.header.frame_id = id_frame;
       // Set the time stamp (current time)
       vector.header.stamp = this->get_clock()->now();
