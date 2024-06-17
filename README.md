@@ -66,8 +66,8 @@ Content: "amcl을 이용한 위치 찾기 && pf를 이용한 길찾기"
  ```
 
  #### 주의사항
- map을 amcl에 적용시키기 위해서는 map의 이름을 map으로 저장해야하며\
- mapping 후 해당 맵을 아래와 같이 ~/pf_amcl_ws/src/PF_amcl/map로 이동시켜야함\
+ map을 amcl에 적용시키기 위해서는 지도를 만들때 이름을 map으로 저장해야하며\
+ mapping 후 해당 맵에 해당하는 pgm, yaml 파일을 아래와 같이 ~/pf_amcl_ws/src/PF_amcl/map로 이동시켜야함(기존에 해당 위치에 있던 map 파일은 제거)\
  경우에 따라 ~/pf_amcl_ws/src/pf_amcl/map일 수도 있음
 
  ![map_path](/images/map_path.png)
