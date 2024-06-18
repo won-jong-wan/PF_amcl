@@ -257,12 +257,12 @@ class PotentialField : public rclcpp::Node
       float x_r = 0;
       float y_r = 0;
 
-      float max_d = 3;
+     
 
       for(int i = 0 ; i < len ; i++)
       {
         // If the value of the scan is < 100m it's not tacking into account
-        if(scan[i] < max_d and scan[i] > 0.1)
+        if(scan[i] < scan_max and scan[i] > 0.1)
         { 
           /**************************************************/
           // Create the Module of the force to simulate
